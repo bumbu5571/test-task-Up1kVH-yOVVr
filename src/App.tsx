@@ -1,131 +1,90 @@
-import { Button, Flex, Table, Text } from '@chakra-ui/react';
-import { useEffect, useState } from 'react';
-
-interface Car {
-  id: string;
-  make: string;
-  model: string;
-  year: number;
-  color: string;
-  engine_capacity: number | null;
-  engine_type: string | null;
-  engine_power: number | null;
-  transmission_type: string | null;
-  drive_type: string | null;
-  price: number | null;
-  fuel_consumption: number | null;
-  is_available: boolean | null;
-  description: string | null;
-}
+import { useCallback, useEffect, useState } from 'react';
+import type { Car } from './components/my-components-app/carTable/types';
+import CarTable from './components/my-components-app/carTable/CarTable';
+import {
+  delay,
+  limit,
+} from './components/my-components-app/carTable/constants';
+import { Toaster } from '@/components/chakra/toaster';
 
 export default function App() {
+  // Локальный state подходит для этого небольшого проекта.
+  // В более крупном приложении стейт-менеджер предоставил бы следующие преимущества: централизованное управление состоянием,  отсутствие prop drilling,
+  // встроенные инструменты для обработки асинхронных действий и загрузки,  легкость передачи данных между компонентами.  Однако,  для этого проекта это избыточно.
   const [data, setData] = useState<Car[]>([]);
+  const [isLoadingCars, setIsLoadingCars] = useState(false);
+  const [errorLoadingCars, setErrorLoadingCars] = useState(false);
+
   const [page, setPage] = useState(1);
   const [totalPage, setTotalPage] = useState(Infinity);
 
+  //  Отслеживает максимальный ID, полученный из JSON Server.
+  //  Используется для генерации новых ID на стороне клиента,  обеспечивая последовательность (1, 2, 3...)
+  //  поскольку JSON Server использует другой формат ID. ("a67f", "b89c" и т.п.).
+  const [totalCountCar, setTotalCountCar] = useState(Infinity);
+
+  async function getCar(pageParam: number, limitParam: number) {
+    setIsLoadingCars(true);
+    setErrorLoadingCars(false);
+    await new Promise((resolve) => setTimeout(resolve, delay));
+
+    try {
+      const res = await fetch(
+        `http://localhost:3000/cars?_sort=-created_at&_page=${pageParam}&_per_page=${limitParam}`
+      );
+
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+
+      const dataDB = await res.json();
+
+      setData((prev) => {
+        if (pageParam === 1) {
+          return dataDB.data;
+        }
+
+        setPage((prev) => prev + 1);
+        return [...prev, ...dataDB.data];
+      });
+      setTotalPage(dataDB.pages);
+      setTotalCountCar(dataDB.items);
+      setErrorLoadingCars(false);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      setErrorLoadingCars(true);
+    } finally {
+      setIsLoadingCars(false);
+    }
+  }
+
   useEffect(() => {
     if (data.length === 0) {
-      fetch(`http://localhost:3000/cars?_page=1&_per_page=10`)
-        .then((res) => res.json())
-        .then((dataDB) => {
-          setData(dataDB.data);
-          setTotalPage(dataDB.pages);
-        });
+      getCar(1, limit);
     }
   }, [data]);
 
-  function clickHandle() {
+  const clickHandle = useCallback(() => {
     if (page >= totalPage) {
       return;
     }
 
-    fetch(`http://localhost:3000/cars?_page=${page + 1}&_per_page=10`)
-      .then((res) => res.json())
-      .then((dataDB) => {
-        setData((prev) => [...prev, ...dataDB.data]);
-        setTotalPage(dataDB.pages);
-      });
-    setPage((prev) => prev + 1);
-  }
+    getCar(page + 1, limit);
+  }, [page, totalPage]);
 
   return (
-    <Flex
-      w='100vw'
-      height='100vh'
-      direction='column'
-      align='center'
-      justify='center'
-      gapY='5'
-    >
-      <Text textStyle='4xl' fontWeight='medium'>
-        Таблица автомобилей
-      </Text>
-      <Table.ScrollArea
-        maxW='2/3'
-        maxH='4/6'
-        h={`${data.length * 37 + 36.5}px`}
-        borderWidth='1px'
-        rounded='md'
-        transition='height 0.5s ease-in-out'
-      >
-        <Table.Root size='sm' variant='outline' showColumnBorder>
-          <Table.Header>
-            <Table.Row bg='Highlight'>
-              <Table.ColumnHeader>Марка</Table.ColumnHeader>
-              <Table.ColumnHeader>Модель</Table.ColumnHeader>
-              <Table.ColumnHeader>Год выпуска</Table.ColumnHeader>
-              <Table.ColumnHeader>Объём двигателя</Table.ColumnHeader>
-              <Table.ColumnHeader>Тип двигателя</Table.ColumnHeader>
-              <Table.ColumnHeader>Мощность двигателя</Table.ColumnHeader>
-              <Table.ColumnHeader>Тип трансмиссии</Table.ColumnHeader>
-              <Table.ColumnHeader>Тип привода</Table.ColumnHeader>
-              <Table.ColumnHeader>Цена</Table.ColumnHeader>
-              <Table.ColumnHeader>Расход топлива</Table.ColumnHeader>
-              <Table.ColumnHeader>В наличии</Table.ColumnHeader>
-              <Table.ColumnHeader textAlign='center'>
-                Описание
-              </Table.ColumnHeader>
-            </Table.Row>
-          </Table.Header>
-          <Table.Body>
-            {data?.map((car) => (
-              <Table.Row key={car.id}>
-                <Table.Cell>{car.make}</Table.Cell>
-                <Table.Cell>{car.model}</Table.Cell>
-                <Table.Cell>{car.year} г</Table.Cell>
-                <Table.Cell>
-                  {car.engine_capacity ? `${car.engine_capacity} л` : null}
-                </Table.Cell>
-                <Table.Cell>{car.engine_type}</Table.Cell>
-                <Table.Cell>
-                  {car.engine_power ? `${car.engine_power} л.с.` : null}
-                </Table.Cell>
-                <Table.Cell>{car.transmission_type}</Table.Cell>
-                <Table.Cell>{car.drive_type}</Table.Cell>
-                <Table.Cell>{`${car.price} \u0024`}</Table.Cell>
-                <Table.Cell>
-                  {car.fuel_consumption
-                    ? `${car.fuel_consumption} л/100км`
-                    : null}
-                </Table.Cell>
-                <Table.Cell textAlign='center'>
-                  {car.is_available ? '\u2705' : '\u274C'}
-                </Table.Cell>
-                <Table.Cell textAlign='center'>{car.description}</Table.Cell>
-              </Table.Row>
-            ))}
-          </Table.Body>
-        </Table.Root>
-      </Table.ScrollArea>
-
-      <Button
-        onClick={clickHandle}
-        bg='Highlight'
-        color='white'
-        disabled={page >= totalPage}
-      >
-        Загрузить больше
-      </Button>
-    </Flex>
+    <>
+      <CarTable
+        data={data}
+        setData={setData}
+        errorLoadingCars={errorLoadingCars}
+        isLoadingCars={isLoadingCars}
+        clickHandle={clickHandle}
+        totalCountCar={totalCountCar}
+        setTotalCountCar={setTotalCountCar}
+        isLastPage={page >= totalPage}
+      />
+      <Toaster />
+    </>
   );
 }
