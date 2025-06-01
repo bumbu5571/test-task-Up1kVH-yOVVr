@@ -21,6 +21,7 @@ import { useState } from 'react';
 import type { Car } from './types';
 import { createCarformShema, type FormValues } from './createCarShema';
 import {
+  createCar,
   delay,
   driveTypeArray,
   engineTypeArray,
@@ -74,31 +75,13 @@ export default function CarTable({
     setIsCreatingCar(true);
     await new Promise((resolve) => setTimeout(resolve, delay));
 
-    const res = fetch(`http://localhost:3000/cars`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json;charset=utf-8',
-      },
-      body: JSON.stringify({
-        ...data,
-        id: String(totalCountCar + 1),
-        created_at: Date.now(),
-      }),
-    });
+    const res = createCar(data, totalCountCar);
 
     res
-      .then((res) => {
-        if (res.status === 201) {
-          return res.json();
-        }
-      })
       .then((data) => {
         setTotalCountCar((prev) => prev + 1);
         setData((prev) => [data, ...prev]);
         reset();
-      })
-      .catch((e) => {
-        console.error(e);
       })
       .finally(() => setIsCreatingCar(false));
 

@@ -15,3 +15,13 @@ export interface Car {
   description: string | null;
   created_at: number;
 }
+
+export interface APIResponse<T> {
+  data: T[];
+  first: number;
+  items: number;
+  last: number;
+  next: number | null;
+  pages: number;
+  prev: number | null;
+}

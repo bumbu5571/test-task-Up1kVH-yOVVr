@@ -3,6 +3,7 @@ import type { Car } from './components/my-components-app/carTable/types';
 import CarTable from './components/my-components-app/carTable/CarTable';
 import {
   delay,
+  getCars,
   limit,
 } from './components/my-components-app/carTable/constants';
 import { Toaster } from '@/components/chakra/toaster';
@@ -23,44 +24,32 @@ export default function App() {
   //  поскольку JSON Server использует другой формат ID. ("a67f", "b89c" и т.п.).
   const [totalCountCar, setTotalCountCar] = useState(Infinity);
 
-  async function getCar(pageParam: number, limitParam: number) {
+  async function updateData(pageParam: number, limitParam: number) {
     setIsLoadingCars(true);
     setErrorLoadingCars(false);
     await new Promise((resolve) => setTimeout(resolve, delay));
 
-    try {
-      const res = await fetch(
-        `http://localhost:3000/cars?_sort=-created_at&_page=${pageParam}&_per_page=${limitParam}`
-      );
+    getCars(pageParam, limitParam)
+      .then(({ data, pages, items }) => {
+        setData((prev) => {
+          if (pageParam === 1) {
+            return data;
+          }
 
-      if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
-      }
-
-      const dataDB = await res.json();
-
-      setData((prev) => {
-        if (pageParam === 1) {
-          return dataDB.data;
-        }
-
-        setPage((prev) => prev + 1);
-        return [...prev, ...dataDB.data];
-      });
-      setTotalPage(dataDB.pages);
-      setTotalCountCar(dataDB.items);
-      setErrorLoadingCars(false);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      setErrorLoadingCars(true);
-    } finally {
-      setIsLoadingCars(false);
-    }
+          setPage((prev) => prev + 1);
+          return [...prev, ...data];
+        });
+        setTotalPage(pages);
+        setTotalCountCar(items);
+        setErrorLoadingCars(false);
+      })
+      .catch(() => setErrorLoadingCars(true))
+      .finally(() => setIsLoadingCars(false));
   }
 
   useEffect(() => {
     if (data.length === 0) {
-      getCar(1, limit);
+      updateData(1, limit);
     }
   }, [data]);
 
@@ -69,7 +58,7 @@ export default function App() {
       return;
     }
 
-    getCar(page + 1, limit);
+    updateData(page + 1, limit);
   }, [page, totalPage]);
 
   return (
