@@ -1,54 +1,83 @@
-# React + TypeScript + Vite
+# React + TypeScript: Car Table Application
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Описание
 
-Currently, two official plugins are available:
+Необходимо написать небольшое приложение на React + Typescript
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Приложение должно содержать:
 
-## Expanding the ESLint configuration
+1.  Таблицу, которая может содержать произвольное кол-во полей (от 5 до 15).
+2.  Данные в таблицу должны загружаться с сервера и использовать Infinite Loader для подгрузки новых данных.
+3.  Стейт-менеджер (или его отсутствие, обосновать выбор или же отсутствие инструмента).
+4.  Форму создания новой записи в таблице - должно быть минимум 5 полей.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+    **Пояснения:**
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-});
-```
+    - Учитывайте, что полей может быть произвольное кол-во.
+    - Поля имеют валидацию.
+    - При отправке должен быть соответствующий стейт (disable кнопки или другие).
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+5.  Форма должна отправляться по api. Запись добавляется в таблицу.
+6.  Код расположен в github.
+7.  Плюсом является написание нескольких тестов. Хотя бы один из тестов обязательно должен покрывать сетевые запросы и асинхронные операции.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x';
-import reactDom from 'eslint-plugin-react-dom';
+Допускается использование любых сторонних библиотек.
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-});
+Для UI возможно использовать любую библиотеку компонентов или фреймворк.
+
+Для API использовать [https://github.com/typicode/json-server](https://github.com/typicode/json-server). Файл c db нужно приложить к проекту.
+
+---
+
+## Установка и запуск
+
+### Предварительные требования
+
+Убедитесь, что у вас установлены:
+
+- **Node.js:** (v18+) - [https://nodejs.org/](https://nodejs.org/)
+- **npm, yarn или pnpm:** Менеджер пакетов на ваш выбор.
+- **Git:** [https://git-scm.com/](https://git-scm.com/)
+
+### Шаги установки
+
+1.  **Клонируйте репозиторий:**
+
+    ```bash
+    git clone [URL вашего репозитория]
+    cd [Название директории репозитория]
+    ```
+
+2.  **Установите зависимости:**
+
+    ```bash
+    npm install # или yarn install, или pnpm install
+    ```
+
+### Запуск приложения
+
+1.  **Запустите React-приложение в режиме разработки:**
+
+    ```bash
+    npm run dev # или yarn dev, или pnpm dev
+    ```
+
+    Это обычно запустит приложение в вашем браузере по адресу `http://localhost:3000`.
+
+2.  **Запустите mock API (json-server):**
+
+    Откройте _новое_ окно терминала и запустите:
+
+    ```bash
+    npm run db # или yarn db, или pnpm db
+    ```
+
+    Это запустит `json-server` на порту 3000 (или на порту, который настроен в вашем `package.json`).
+
+### Запуск тестов
+
+Для запуска модульных тестов выполните:
+
+```bash
+npm run test # или yarn test, или pnpm test
 ```
